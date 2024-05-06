@@ -8,6 +8,7 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use shuttle_persist::{PersistError, PersistInstance};
 use std::cmp::Ordering;
+use chrono::{DateTime, Utc};
 use tower_http::services::{ServeDir, ServeFile};
 
 pub mod api;
@@ -63,6 +64,8 @@ pub enum ComparisonState {
 pub struct Comparison {
     /// Name of comparison
     pub name: String,
+    /// Time of Alice's submission, currently not used except to keep history
+    pub time: DateTime<Utc>,
     /// State of comparison
     pub state: ComparisonState,
 }

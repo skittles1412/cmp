@@ -4,6 +4,7 @@ use crate::{
     AppState, Comparison, ComparisonState, Nf64,
 };
 use axum::{extract::State, Json, Router};
+use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use shuttle_persist::PersistInstance;
 use uuid::Uuid;
@@ -35,6 +36,7 @@ async fn store(
         &id,
         Comparison {
             name: req.name,
+            time: Utc::now(),
             state: ComparisonState::Value(req.value),
         },
     )?;

@@ -8,6 +8,7 @@ anyhow = { version = "1.0.82", features = ["backtrace"] }
 askama = "0.12.1"
 askama_axum = "0.4.0"
 axum = "0.7.5"
+chrono = "0.4.38"
 ordered-float = { version = "4.2.0", features = ["serde"] }
 serde = "1.0.200"
 shuttle-axum = "0.44.0"
