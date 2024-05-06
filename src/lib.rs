@@ -1,7 +1,8 @@
 use crate::error::AppResult;
-use askama_axum::Template;
+use askama_axum::{IntoResponse, Template};
 use axum::{
     extract::{Path, State},
+    http::StatusCode,
     Router,
 };
 use chrono::{DateTime, Utc};
@@ -9,7 +10,7 @@ use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use shuttle_persist::{PersistError, PersistInstance};
 use std::cmp::Ordering;
-use tower_http::services::{ServeDir, ServeFile};
+use tower_http::services::ServeDir;
 
 pub mod api;
 pub mod error;
@@ -167,21 +168,26 @@ async fn view(State(state): State<AppState>, Path(id): Path<String>) -> AppResul
     })
 }
 
+#[derive(Template)]
+#[template(path = "404.html")]
+struct NotFoundTemplate;
+
+/// The 404 handler
+async fn not_found() -> impl IntoResponse {
+    (StatusCode::NOT_FOUND, NotFoundTemplate)
+}
+
 pub fn app(persist: PersistInstance) -> Router {
     use axum::routing::get;
 
     let state = AppState { persist };
 
-    let html_routes = Router::new()
+    Router::new()
         .route("/", get(index))
         .route("/bob/:id", get(bob))
-        .route("/view/:id", get(view));
-
-    let api_routes = Router::new().nest("/api", api::app());
-
-    Router::new()
-        .merge(html_routes)
-        .merge(api_routes)
-        .fallback_service(ServeDir::new("static").fallback(ServeFile::new("static/404.html")))
+        .route("/view/:id", get(view))
+        .nest("/api", api::app())
+        .nest_service("/assets", ServeDir::new("assets").fallback(get(not_found)))
+        .fallback(get(not_found))
         .with_state(state)
 }
