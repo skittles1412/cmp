@@ -3,7 +3,10 @@ use crate::{
     error::{ApiError, ApiResult},
     AppState, Comparison, ComparisonState, Nf64,
 };
-use axum::{extract::State, Json, Router};
+use axum::{
+    extract::{Path, State},
+    Json, Router,
+};
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use shuttle_persist::PersistInstance;
@@ -88,12 +91,6 @@ async fn compare(
     Ok(Json(CompareRes { ok: () }))
 }
 
-/// Request of [`result`]
-#[derive(Deserialize)]
-struct ResultReq {
-    id: String,
-}
-
 /// Response of [`result`]
 #[derive(Serialize)]
 struct ResultRes {
@@ -104,9 +101,9 @@ struct ResultRes {
 /// Get the result of a comparison
 async fn result(
     State(state): State<AppState>,
-    Json(req): Json<ResultReq>,
+    Path(id): Path<String>,
 ) -> ApiResult<Json<ResultRes>> {
-    let data = persist_load(&state.persist, &req.id)?;
+    let data = persist_load(&state.persist, &id)?;
     let ComparisonState::Result(ord) = data.state else {
         return Err(ApiError::IdNotCompared);
     };
@@ -118,7 +115,7 @@ async fn result(
 }
 
 pub fn app() -> Router<AppState> {
-    use axum::routing::post;
+    use axum::routing::{get, post};
     use tower_http::cors::{Any as CorsAny, CorsLayer};
 
     let cors = CorsLayer::new()
@@ -129,6 +126,6 @@ pub fn app() -> Router<AppState> {
     Router::new()
         .route("/store", post(store))
         .route("/compare", post(compare))
-        .route("/result", post(result))
+        .route("/result/:id", get(result))
         .layer(cors)
 }

@@ -4,11 +4,11 @@ use axum::{
     extract::{Path, State},
     Router,
 };
+use chrono::{DateTime, Utc};
 use ordered_float::NotNan;
 use serde::{Deserialize, Serialize};
 use shuttle_persist::{PersistError, PersistInstance};
 use std::cmp::Ordering;
-use chrono::{DateTime, Utc};
 use tower_http::services::{ServeDir, ServeFile};
 
 pub mod api;
