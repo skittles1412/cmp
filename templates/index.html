@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CMP - Alice</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<main>
+    You're Alice, wishing to secretly compare a real (f64) with Bob.
+    <div>
+        <form id="form">
+            <fieldset id="fieldset">
+                <label for="name">Name of comparison: </label>
+                <input id="name" type="text">
+                <br>
+                <label for="number">Number: </label>
+                <input id="number" type="text">
+                <br>
+                <button>Submit</button>
+            </fieldset>
+        </form>
+    </div>
+    <div>
+        <span id="result"></span>
+    </div>
+    <div>
+        <ol id="log"></ol>
+    </div>
+</main>
+<template id="template">
+    <li>
+        Comparison called "<span data-tmpl="name"></span>" with value <span data-tmpl="value"></span> submitted. Give <a
+            data-tmpl="bob-link">this link</a> to Bob and use <a data-tmpl="view-link">this link</a> to view the comparison
+        result.
+    </li>
+</template>
+<script>
+    function logSubmit(name, value, id) {
+        const tmpl = document.getElementById("template").content;
+
+        tmpl.querySelector("[data-tmpl='name']").textContent = name;
+        tmpl.querySelector("[data-tmpl=value]").textContent = value;
+        tmpl.querySelector("[data-tmpl=bob-link]").href = `bob/${id}`;
+        tmpl.querySelector("[data-tmpl=view-link]").href = `view/${id}`;
+
+        document.getElementById("log").appendChild(tmpl.cloneNode(true));
+    }
+
+    async function onSubmit() {
+        const name = document.getElementById("name").value;
+        const number = Number.parseFloat(document.getElementById("number").value);
+        const result = document.getElementById("result");
+
+        function setResult(type, msg) {
+            result.setAttribute("data-result", type);
+            result.textContent = msg;
+        }
+
+        if (Number.isNaN(number)) {
+            setResult("error", "error: please enter a valid number");
+            return;
+        } else if (!Number.isFinite(number)) {
+            setResult("error", "error: your number is too large");
+            return;
+        }
+
+        setResult("submitting", "submitting...");
+
+        let resData;
+        try {
+            const res = await fetch("http://localhost:8000/api/store", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify({
+                    name,
+                    value: number,
+                })
+            });
+            resData = [res.ok, await res.json()];
+        } catch (e) {
+            setResult("error", "some unknown error occurred");
+            console.error(e);
+            return;
+        }
+        let [ok, res] = resData;
+
+        if (res.error) {
+            setResult("error", `error: ${res.error}`);
+            return;
+        } else if (typeof res.id !== "string") {
+            setResult("error", "error: unexpected result format");
+            return;
+        } else if (!ok) {
+            setResult("error", "some unknown error occurred");
+            console.error(res);
+            return;
+        }
+
+        setResult("success", "success!");
+        logSubmit(name, number, res.id);
+    }
+
+    const form = document.getElementById("form");
+    const fieldset = document.getElementById("fieldset");
+
+    form.addEventListener("submit", async e => {
+        e.preventDefault();
+
+        fieldset.disabled = true;
+        await onSubmit();
+        fieldset.disabled = false;
+    });
+</script>
+</body>
+</html>

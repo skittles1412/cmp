@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CMP - Bob</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+{% match state %}
+{% when BobState::NoSuchId %}
+<main>
+    You're Bob but... the comparison you are looking for cannot be found.<br>
+    <a href="/">Go Home</a>
+</main>
+{% when BobState::IdComparedAlready with {id} %}
+<main>
+    You're Bob but... it seems like someone has already submitted a number as Bob.<br>
+    <a href="/">Go Home</a><br>
+    <a href="/view/{{ id }}">View Comparison Result</a>
+</main>
+{% when BobState::BobMain with {name, id} %}
+<main id="main">
+    You're Bob, and it's your turn to submit your number for the comparison "{{ name }}".
+    <div>
+        <form id="form">
+            <fieldset id="fieldset">
+                <label for="number">Number: </label>
+                <input id="number" type="text">
+                <br>
+                <button>Submit</button>
+            </fieldset>
+        </form>
+    </div>
+    <div>
+        <span id="result"></span>
+    </div>
+</main>
+<script>
+    async function onSubmit() {
+        const number = Number.parseFloat(document.getElementById("number").value);
+        const result = document.getElementById("result");
+
+        function setResult(type, msg) {
+            result.setAttribute("data-result", type);
+            result.textContent = msg;
+        }
+
+        if (Number.isNaN(number)) {
+            setResult("error", "error: please enter a valid number");
+            return;
+        } else if (!Number.isFinite(number)) {
+            setResult("error", "error: your number is too large");
+            return;
+        }
+
+        setResult("submitting", "submitting...");
+
+        let resData;
+        try {
+            const res = await fetch("http://localhost:8000/api/compare", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+                body: JSON.stringify({
+                    id: "{{ id }}",
+                    value: number,
+                })
+            });
+            resData = [res.ok, await res.json()];
+        } catch (e) {
+            setResult("error", "some unknown error occurred");
+            console.error(e);
+            return;
+        }
+        let [ok, res] = resData;
+
+        if (res.error) {
+            setResult("error", `error: ${res.error}`);
+            return;
+        } else if (!ok) {
+            setResult("error", "some unknown error occurred");
+            console.error(res);
+            return;
+        }
+
+        setResult("success", "success! loading the comparison result");
+        location.href = `/view/{{ id }}`;
+    }
+
+    const form = document.getElementById("form");
+    const fieldset = document.getElementById("fieldset");
+
+    form.addEventListener("submit", async e => {
+        e.preventDefault();
+
+        fieldset.disabled = true;
+        await onSubmit();
+        fieldset.disabled = false;
+    });
+</script>
+{% endmatch %}
+
+</body>
+</html>

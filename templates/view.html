@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CMP - View</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+{% match state %}
+{% when ViewState::NoSuchId %}
+<main>
+    The comparison you are looking for cannot be found.<br>
+    <a href="/">Go Home</a>
+</main>
+{% when ViewState::IdNotCompared with {name, id} %}
+<main>
+    Waiting for Bob to submit his number for comparison "{{ name }}" (refresh for updates).<br>
+    <a href="/">Go Home</a><br>
+    <a href="/bob/{{ id }}">Bob's link</a>
+</main>
+{% when ViewState::ViewMain with {name, result} %}
+<main id="main">
+    {% let comparison_text %}
+    {% match result %}
+        {% when Ordering::Less %}
+            {% let comparison_text = "less than" %}
+        {% when Ordering::Equal %}
+            {% let comparison_text = "equal to" %}
+        {% when Ordering::Greater %}
+            {% let comparison_text = "greater than" %}
+    {% endmatch %}
+    Comparison "{{ name }}":<br>
+    Alice's real was {{ comparison_text }} Bob's real.
+</main>
+{% endmatch %}
+
+</body>
+</html>

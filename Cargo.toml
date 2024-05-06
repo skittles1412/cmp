@@ -1,0 +1,21 @@
+[package]
+name = "warren-cmp"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { version = "1.0.82", features = ["backtrace"] }
+askama = "0.12.1"
+askama_axum = "0.4.0"
+axum = "0.7.5"
+ordered-float = { version = "4.2.0", features = ["serde"] }
+serde = "1.0.200"
+shuttle-axum = "0.44.0"
+shuttle-persist = "0.44.0"
+shuttle-runtime = "0.44.0"
+tokio = "1.37.0"
+tower-http = { version = "0.5.2", features = ["cors", "fs"] }
+uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
+
+[profile.dev.package.askama_derive]
+opt-level = 3
