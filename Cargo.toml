@@ -1,7 +1,14 @@
 [package]
 name = "cmp"
 version = "0.1.0"
+authors = ["skittles1412"]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/skittles1412/cmp"
 edition = "2021"
+description = """
+A highly useful website to compare two numbers in secret.
+"""
 
 [dependencies]
 anyhow = { version = "1.0.82", features = ["backtrace"] }
